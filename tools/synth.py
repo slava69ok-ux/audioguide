@@ -1,5 +1,5 @@
 # Озвучка глав через edge-tts + сбор таймингов абзацев из WordBoundary.
-# Использование: .venv/bin/python tools/synth.py [NN ...]  (без аргументов — все главы)
+# Использование: .venv/bin/python tools/synth.py <локация> [NN ...]  (без NN — все главы)
 import asyncio
 import json
 import re
@@ -11,9 +11,10 @@ import edge_tts
 
 VOICE = "ru-RU-DmitryNeural"
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = ROOT / "scripts"
-AUDIO = ROOT / "locations" / "mutianyu" / "audio"
-TIMINGS = ROOT / "locations" / "mutianyu" / "timings"
+LOC = sys.argv[1] if len(sys.argv) > 1 else "mutianyu"
+SCRIPTS = ROOT / "scripts" / LOC
+AUDIO = ROOT / "locations" / LOC / "audio"
+TIMINGS = ROOT / "locations" / LOC / "timings"
 FFPROBE = ROOT / ".venv" / "bin" / "static_ffprobe"
 
 
@@ -117,10 +118,14 @@ async def synth_chapter(txt_path, retries=3):
 
 
 async def main():
-    only = set(sys.argv[1:])
+    only = set(sys.argv[2:])
+    AUDIO.mkdir(parents=True, exist_ok=True)
+    TIMINGS.mkdir(parents=True, exist_ok=True)
     files = sorted(SCRIPTS.glob("*.txt"))
     if only:
         files = [f for f in files if f.name[:2] in only]
+    if not files:
+        sys.exit(f"нет глав в {SCRIPTS}")
     for f in files:
         await synth_chapter(f)
 

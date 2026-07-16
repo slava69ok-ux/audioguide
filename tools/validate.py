@@ -11,7 +11,7 @@ BAD_ABBR = [r"\bкм\b", r"\bкв\b", r"\bтыс\b",
 MD_CHARS = r"[#*_`\[\]{}()<>|~^%$@&+=/\\]"
 
 ok = True
-for f in sorted(SCRIPTS.glob("*.txt")):
+for f in sorted(SCRIPTS.glob("*/*.txt")):
     text = f.read_text(encoding="utf-8")
     problems = []
     for m in re.finditer(r"[A-Za-z]+", text):
@@ -36,6 +36,7 @@ for f in sorted(SCRIPTS.glob("*.txt")):
         print(f"     - {p}")
         ok = False
 
-total = sum(len(f.read_text(encoding='utf-8').split()) for f in SCRIPTS.glob("*.txt"))
-print(f"\nИТОГО: {total} слов ≈ {total/135:.0f} минут при 135 слов/мин")
+for d in sorted(p for p in SCRIPTS.iterdir() if p.is_dir()):
+    total = sum(len(f.read_text(encoding='utf-8').split()) for f in d.glob("*.txt"))
+    print(f"\nИТОГО {d.name}: {total} слов ≈ {total/135:.0f} минут при 135 слов/мин")
 sys.exit(0 if ok else 1)

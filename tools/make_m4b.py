@@ -1,16 +1,21 @@
 # Собирает m4b-аудиокнигу с главами (резерв на случай блокировки github.io):
-# mp3 -> concat -> AAC 64k -> mutianyu.m4b с FFMETADATA-главами.
+# mp3 -> concat -> AAC 64k -> build/<loc>.m4b с FFMETADATA-главами.
+# Использование: .venv/bin/python tools/make_m4b.py <локация>
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-AUDIO = ROOT / "locations" / "mutianyu" / "audio"
+LOC = sys.argv[1] if len(sys.argv) > 1 else "mutianyu"
+AUDIO = ROOT / "locations" / LOC / "audio"
 FFMPEG = ROOT / ".venv" / "bin" / "static_ffmpeg"
 BUILD = ROOT / "build"
 BUILD.mkdir(exist_ok=True)
 
-chapters = json.loads((ROOT / "locations" / "mutianyu" / "chapters.json").read_text(encoding="utf-8"))
+lib = json.loads((ROOT / "locations" / "locations.json").read_text(encoding="utf-8"))
+exc = next(e for e in lib["excursions"] if e["id"] == LOC)
+chapters = json.loads((ROOT / "locations" / LOC / "chapters.json").read_text(encoding="utf-8"))
 
 concat = BUILD / "list.txt"
 concat.write_text(
@@ -20,9 +25,9 @@ concat.write_text(
 
 meta_lines = [
     ";FFMETADATA1",
-    "title=Великая стена: Мутяньюй — аудиоэкскурсия",
+    f"title={exc['title']} — аудиоэкскурсия",
     "artist=Аудиогид",
-    "album=Аудиогид: Китай",
+    f"album=Аудиогид: {exc['country']}",
     "genre=Audiobook",
 ]
 t = 0.0
@@ -34,7 +39,7 @@ for c in chapters:
 meta = BUILD / "meta.txt"
 meta.write_text("\n".join(meta_lines) + "\n", encoding="utf-8")
 
-out = BUILD / "mutianyu.m4b"
+out = BUILD / f"{LOC}.m4b"
 subprocess.run(
     [str(FFMPEG), "-y", "-hide_banner", "-loglevel", "error",
      "-f", "concat", "-safe", "0", "-i", str(concat),

@@ -2,7 +2,7 @@
    Все пути относительные — scope равен каталогу, где лежит sw.js. */
 "use strict";
 
-const SHELL_CACHE = "shell-v3";
+const SHELL_CACHE = "shell-v4";
 const SHELL_FILES = [
   "./",
   "index.html",
@@ -38,10 +38,33 @@ self.addEventListener("fetch", (e) => {
 
   if (req.headers.has("range")) {
     e.respondWith(rangeResponse(req));
+  } else if (url.pathname.endsWith(".json")) {
+    // списки экскурсий и глав: сеть сначала, чтобы новые экскурсии
+    // появлялись без обновления SW; офлайн — из кэша
+    e.respondWith(networkFirst(req));
   } else {
     e.respondWith(cacheFirst(req));
   }
 });
+
+async function networkFirst(req) {
+  try {
+    // no-cache: заставляем браузер ревалидировать JSON у сервера, а не брать из HTTP-кэша
+    const resp = await fetch(req, { cache: "no-cache" });
+    if (resp.ok) {
+      // освежаем копию в том кэше, где файл уже лежит (shell или loc-*)
+      for (const name of await caches.keys()) {
+        const c = await caches.open(name);
+        if (await c.match(req)) { await c.put(req, resp.clone()); break; }
+      }
+    }
+    return resp;
+  } catch (err) {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    return new Response("offline", { status: 503, statusText: "Offline" });
+  }
+}
 
 async function cacheFirst(req) {
   const cached = await caches.match(req, { ignoreSearch: false });

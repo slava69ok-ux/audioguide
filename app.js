@@ -67,6 +67,8 @@ function buildCard(exc) {
         <a class="btn primary listen">Слушать</a>
         <button class="btn offline-btn">Скачать офлайн</button>
       </div>
+      <button class="chapters-toggle" hidden>Все главы ▾</button>
+      <ol class="card-chapters" hidden></ol>
       <p class="offline-state" hidden>✓ Доступно офлайн<button class="del">удалить</button></p>
     </div>`;
   card.querySelector("h3").textContent = exc.title;
@@ -77,6 +79,24 @@ function buildCard(exc) {
   fetchJSON(`locations/${exc.id}/chapters.json`).then((chs) => {
     const total = chs.reduce((a, c) => a + c.duration_sec, 0);
     card.querySelector(".meta").textContent = `${chs.length} глав · ${Math.round(total / 60)} минут`;
+
+    // разворачиваемый список глав: тап по главе открывает плеер сразу с неё
+    const toggle = card.querySelector(".chapters-toggle");
+    const ol = card.querySelector(".card-chapters");
+    chs.forEach((c, i) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="num">${i + 1}</span><span class="name"></span><span class="dur">${fmt(c.duration_sec)}</span>`;
+      li.querySelector(".name").textContent = c.title;
+      li.addEventListener("click", () => {
+        location.href = `player.html?loc=${encodeURIComponent(exc.id)}&ch=${i + 1}`;
+      });
+      ol.appendChild(li);
+    });
+    toggle.hidden = false;
+    toggle.addEventListener("click", () => {
+      ol.hidden = !ol.hidden;
+      toggle.textContent = ol.hidden ? "Все главы ▾" : "Все главы ▴";
+    });
   }).catch(() => { card.querySelector(".meta").textContent = ""; });
 
   const btn = card.querySelector(".offline-btn");
@@ -408,9 +428,13 @@ async function initPlayer() {
   }
 
   /* ---------- восстановление позиции ---------- */
+  // явный ?ch=N (нумерация с 1) важнее сохранённой позиции — открываем сразу нужную главу
+  const chParam = parseInt(params.get("ch") || "", 10);
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem("ag-pos") || "null"); } catch (e) {}
-  if (saved && saved.loc === loc && (saved.chapter > 0 || saved.time > 20)) {
+  if (chParam >= 1 && chParam <= chapters.length) {
+    loadChapter(chParam - 1);
+  } else if (saved && saved.loc === loc && (saved.chapter > 0 || saved.time > 20)) {
     $("#resume-text").textContent = `Продолжить с ${fmt(saved.time)}, глава ${saved.chapter + 1}?`;
     $("#resume-banner").hidden = false;
     $("#resume-yes").addEventListener("click", () => {

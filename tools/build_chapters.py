@@ -1,25 +1,17 @@
-# Собирает locations/mutianyu/chapters.json из mp3 (длительности через ffprobe).
+# Собирает locations/<loc>/chapters.json из mp3 (длительности через ffprobe).
+# Названия глав — из scripts/<loc>/titles.json.
+# Использование: .venv/bin/python tools/build_chapters.py <локация>
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-AUDIO = ROOT / "locations" / "mutianyu" / "audio"
+LOC = sys.argv[1] if len(sys.argv) > 1 else "mutianyu"
+AUDIO = ROOT / "locations" / LOC / "audio"
 FFPROBE = ROOT / ".venv" / "bin" / "static_ffprobe"
 
-TITLES = {
-    "01": "Первый взгляд на Мутяньюй",
-    "02": "Зачем Китаю стена",
-    "03": "Хроника стен: от Цинь до монголов",
-    "04": "История Мутяньюй",
-    "05": "Архитектура и инженерия",
-    "06": "Башни и сигнальная система",
-    "07": "Война на этом участке",
-    "08": "Один день солдата",
-    "09": "Прогулка по Мутяньюй",
-    "10": "Забвение и возрождение",
-    "11": "Стена сегодня: символ и мифы",
-}
+titles = json.loads((ROOT / "scripts" / LOC / "titles.json").read_text(encoding="utf-8"))
 
 chapters = []
 for mp3 in sorted(AUDIO.glob("*.mp3")):
@@ -28,9 +20,10 @@ for mp3 in sorted(AUDIO.glob("*.mp3")):
         capture_output=True, text=True, check=True,
     )
     dur = float(json.loads(out.stdout)["format"]["duration"])
-    chapters.append({"file": f"audio/{mp3.name}", "title": TITLES[mp3.stem], "duration_sec": round(dur, 2)})
+    nn = mp3.stem
+    chapters.append({"file": f"audio/{mp3.name}", "title": titles[nn], "duration_sec": round(dur, 2)})
 
-path = ROOT / "locations" / "mutianyu" / "chapters.json"
-path.write_text(json.dumps(chapters, ensure_ascii=False, indent=1), encoding="utf-8")
+out_path = ROOT / "locations" / LOC / "chapters.json"
+out_path.write_text(json.dumps(chapters, ensure_ascii=False, indent=1), encoding="utf-8")
 total = sum(c["duration_sec"] for c in chapters)
-print(f"{len(chapters)} глав, всего {total/60:.1f} минут -> {path}")
+print(f"готово: {out_path} — {len(chapters)} глав, {total/60:.1f} мин")
