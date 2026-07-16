@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Аудиогид — плеер</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="player-page">
+
+<div id="resume-banner" hidden>
+  <span id="resume-text"></span>
+  <div class="resume-actions">
+    <button id="resume-yes" class="btn primary">Продолжить</button>
+    <button id="resume-no" class="btn">Сначала</button>
+  </div>
+</div>
+
+<header class="player-header">
+  <a class="icon-btn back" href="index.html" aria-label="К библиотеке">‹</a>
+  <div class="header-titles">
+    <div id="exc-title">…</div>
+  </div>
+  <button id="btn-text-mode" class="icon-btn" aria-label="Текст">Текст</button>
+</header>
+
+<main id="stage">
+  <section id="art-view">
+    <div class="artwork"><img src="icons/icon-512.png" alt=""></div>
+  </section>
+  <section id="text-view" hidden></section>
+</main>
+
+<footer class="controls">
+  <div id="chapter-label">Глава – из –</div>
+  <h2 id="chapter-title">…</h2>
+
+  <div class="bar-block">
+    <div id="chapter-bar" class="bar big"><div class="fill"></div><div class="thumb"></div></div>
+    <div class="bar-times"><span id="ch-elapsed">0:00</span><span id="ch-percent"></span><span id="ch-remain">−0:00</span></div>
+  </div>
+
+  <div class="bar-block total">
+    <div id="total-bar" class="bar"><div class="fill"></div></div>
+    <div class="bar-times small"><span id="t-elapsed">0:00</span><span id="t-percent">Вся экскурсия</span><span id="t-remain">−0:00</span></div>
+  </div>
+
+  <div class="buttons">
+    <button id="btn-prev" class="ctl" aria-label="Предыдущая глава">⏮</button>
+    <button id="btn-back15" class="ctl" aria-label="Назад 15 секунд">−15</button>
+    <button id="btn-play" class="ctl play" aria-label="Играть">▶</button>
+    <button id="btn-fwd15" class="ctl" aria-label="Вперёд 15 секунд">+15</button>
+    <button id="btn-next" class="ctl" aria-label="Следующая глава">⏭</button>
+  </div>
+
+  <div class="buttons secondary">
+    <button id="btn-speed" class="btn">1×</button>
+    <button id="btn-chapters" class="btn">Главы</button>
+  </div>
+</footer>
+
+<div id="chapters-panel" hidden>
+  <div class="panel-head">
+    <h3>Главы</h3>
+    <button id="chapters-close" class="icon-btn" aria-label="Закрыть">✕</button>
+  </div>
+  <ol id="chapters-list"></ol>
+</div>
+
+<audio id="audio" playsinline preload="metadata"></audio>
+<script src="app.js"></script>
+</body>
+</html>
