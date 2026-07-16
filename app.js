@@ -12,6 +12,13 @@ function fmt(sec) {
   return h ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
 async function fetchJSON(url) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${url}: ${r.status}`);
@@ -78,7 +85,9 @@ function buildCard(exc) {
 
   fetchJSON(`locations/${exc.id}/chapters.json`).then((chs) => {
     const total = chs.reduce((a, c) => a + c.duration_sec, 0);
-    card.querySelector(".meta").textContent = `${chs.length} глав · ${Math.round(total / 60)} минут`;
+    const mins = Math.round(total / 60);
+    card.querySelector(".meta").textContent =
+      `${chs.length} ${plural(chs.length, "глава", "главы", "глав")} · ${mins} ${plural(mins, "минута", "минуты", "минут")}`;
 
     // разворачиваемый список глав: тап по главе открывает плеер сразу с неё
     const toggle = card.querySelector(".chapters-toggle");
