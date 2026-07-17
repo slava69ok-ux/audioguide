@@ -2,7 +2,7 @@
    Все пути относительные — scope равен каталогу, где лежит sw.js. */
 "use strict";
 
-const SHELL_CACHE = "shell-v5";
+const SHELL_CACHE = "shell-v6";
 const SHELL_FILES = [
   "./",
   "index.html",
@@ -39,29 +39,45 @@ self.addEventListener("fetch", (e) => {
   if (req.headers.has("range")) {
     e.respondWith(rangeResponse(req));
   } else if (url.pathname.endsWith(".json")) {
-    // списки экскурсий и глав: сеть сначала, чтобы новые экскурсии
-    // появлялись без обновления SW; офлайн — из кэша
-    e.respondWith(networkFirst(req));
+    e.respondWith(jsonResponse(e));
   } else {
     e.respondWith(cacheFirst(req));
   }
 });
 
-async function networkFirst(req) {
-  try {
-    // no-cache: заставляем браузер ревалидировать JSON у сервера, а не брать из HTTP-кэша
-    const resp = await fetch(req, { cache: "no-cache" });
-    if (resp.ok) {
-      // освежаем копию в том кэше, где файл уже лежит (shell или loc-*)
-      for (const name of await caches.keys()) {
-        const c = await caches.open(name);
-        if (await c.match(req)) { await c.put(req, resp.clone()); break; }
+/* JSON (библиотека, главы, тайминги): кэш отдаём МГНОВЕННО, сеть — фоном
+   для обновления копии. Иначе при выключенной или медленной сети (Китай!)
+   запрос висит и приложение застревает на «Загружаю…». */
+async function jsonResponse(e) {
+  const req = e.request;
+  const cached = await caches.match(req);
+
+  const refresh = (async () => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), cached ? 7000 : 20000);
+    try {
+      // no-cache: ревалидируем у сервера, а не берём из HTTP-кэша браузера
+      const resp = await fetch(req, { cache: "no-cache", signal: ctrl.signal });
+      if (resp.ok) {
+        // освежаем копию в том кэше, где файл уже лежит (shell или loc-*)
+        for (const name of await caches.keys()) {
+          const c = await caches.open(name);
+          if (await c.match(req)) { await c.put(req, resp.clone()); break; }
+        }
       }
+      return resp;
+    } finally {
+      clearTimeout(timer);
     }
-    return resp;
+  })();
+
+  if (cached) {
+    e.waitUntil(refresh.catch(() => {}));
+    return cached;
+  }
+  try {
+    return await refresh;
   } catch (err) {
-    const cached = await caches.match(req);
-    if (cached) return cached;
     return new Response("offline", { status: 503, statusText: "Offline" });
   }
 }
