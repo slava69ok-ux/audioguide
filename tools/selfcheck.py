@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ok = True
 
 # целевой хронометраж по локациям, минуты (по умолчанию — просто здравый смысл)
-RANGES = {"mutianyu": (78, 95), "tianmen": (40, 62)}
+RANGES = {"mutianyu": (78, 95), "tianmen": (40, 62), "wulingyuan": (36, 62)}
 
 
 def fail(msg):
@@ -67,7 +67,7 @@ for exc in lib["excursions"]:
 
 # sw: перечисленные файлы shell существуют
 sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-for m in re.finditer(r'"([^"]+\.(?:html|js|css|json|png))"', sw):
+for m in re.finditer(r'"([^"]+\.(?:html|js|css|json|png|woff2?))"', sw):
     p = m.group(1)
     if not (ROOT / p).exists():
         fail(f"sw.js кэширует несуществующий {p}")

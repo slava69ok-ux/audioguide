@@ -2,7 +2,7 @@
    Все пути относительные — scope равен каталогу, где лежит sw.js. */
 "use strict";
 
-const SHELL_CACHE = "shell-v6";
+const SHELL_CACHE = "shell-v7";
 const SHELL_FILES = [
   "./",
   "index.html",
@@ -13,12 +13,20 @@ const SHELL_FILES = [
   "icons/icon-180.png",
   "icons/icon-192.png",
   "icons/icon-512.png",
+  "fonts/golos-cyrillic.woff2",
+  "fonts/golos-latin.woff2",
+  "fonts/playfair-cyrillic.woff",
+  "fonts/playfair-latin.woff",
   "locations/locations.json",
 ];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(SHELL_CACHE).then((c) => c.addAll(SHELL_FILES)).then(() => self.skipWaiting())
+    caches.open(SHELL_CACHE)
+      // cache: "reload" — тянем файлы с сервера, минуя HTTP-кэш браузера,
+      // иначе в новую версию shell может попасть старый styles/app
+      .then((c) => c.addAll(SHELL_FILES.map((f) => new Request(f, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
   );
 });
 
