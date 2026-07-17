@@ -2,7 +2,7 @@
    Все пути относительные — scope равен каталогу, где лежит sw.js. */
 "use strict";
 
-const SHELL_CACHE = "shell-v7";
+const SHELL_CACHE = "shell-v8";
 const SHELL_FILES = [
   "./",
   "index.html",
@@ -91,7 +91,9 @@ async function jsonResponse(e) {
 }
 
 async function cacheFirst(req) {
-  const cached = await caches.match(req, { ignoreSearch: false });
+  // ignoreSearch: ссылка player.html?loc=X должна находить закэшированный player.html,
+  // иначе офлайн-навигация в плеер ломается и вместо него открывается библиотека
+  const cached = await caches.match(req, { ignoreSearch: true });
   if (cached) return cached;
   try {
     return await fetch(req);
