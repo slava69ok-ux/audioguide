@@ -372,8 +372,19 @@ async function initPlayer() {
   playBtn.addEventListener("click", () => {
     if (audio.paused) audio.play().catch(() => {}); else audio.pause();
   });
-  audio.addEventListener("play", () => { playBtn.textContent = "⏸"; });
-  audio.addEventListener("pause", () => { playBtn.textContent = "▶"; savePos(); });
+  audio.addEventListener("play", () => {
+    playBtn.textContent = "⏸";
+    $("#resume-banner").hidden = true;
+    // явное состояние для iOS: без него play/pause с локскрина глохнут после паузы
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+  });
+  audio.addEventListener("pause", () => {
+    playBtn.textContent = "▶";
+    savePos();
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+    lastPosUpdate = 0;
+    updatePositionState();
+  });
 
   $("#btn-back15").addEventListener("click", () => { audio.currentTime = Math.max(0, audio.currentTime - 15); });
   $("#btn-fwd15").addEventListener("click", () => { audio.currentTime = Math.min(chDur(), audio.currentTime + 15); });
@@ -497,6 +508,9 @@ async function initPlayer() {
     $("#resume-no").addEventListener("click", () => {
       $("#resume-banner").hidden = true;
       loadChapter(0);
+    });
+    $("#resume-close").addEventListener("click", () => {
+      $("#resume-banner").hidden = true;
     });
     loadChapter(saved.chapter, { at: saved.time });
   } else {
