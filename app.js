@@ -44,19 +44,53 @@ async function initLibrary() {
     return;
   }
 
-  root.innerHTML = "";
-  const byCountry = new Map();
-  for (const exc of data.excursions) {
-    if (!byCountry.has(exc.country)) byCountry.set(exc.country, []);
-    byCountry.get(exc.country).push(exc);
-  }
+  const countries = [...new Set(data.excursions.map((e) => e.country))]
+    .sort((a, b) => a.localeCompare(b, "ru"));
+  const country = new URLSearchParams(location.search).get("country");
 
-  for (const [country, excs] of byCountry) {
-    const h = document.createElement("h2");
-    h.className = "country-title";
-    h.textContent = country;
-    root.appendChild(h);
-    for (const exc of excs) root.appendChild(buildCard(exc));
+  root.innerHTML = "";
+  if (country && countries.includes(country)) {
+    renderCountry(root, data, country);
+  } else {
+    renderHome(root, data, countries);
+  }
+}
+
+/* Главная: список стран по алфавиту */
+function renderHome(root, data, countries) {
+  const ul = document.createElement("ul");
+  ul.className = "country-list";
+  for (const c of countries) {
+    const n = data.excursions.filter((e) => e.country === c).length;
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.className = "country-link";
+    a.href = `index.html?country=${encodeURIComponent(c)}`;
+    a.innerHTML = `<span class="country-name"></span><span class="country-count"></span><span class="country-arrow">›</span>`;
+    a.querySelector(".country-name").textContent = c;
+    a.querySelector(".country-count").textContent = `${n} ${plural(n, "экскурсия", "экскурсии", "экскурсий")}`;
+    li.appendChild(a);
+    ul.appendChild(li);
+  }
+  root.appendChild(ul);
+}
+
+/* Страница страны: её экскурсии */
+function renderCountry(root, data, country) {
+  document.title = `Аудиогид — ${country}`;
+  const h1 = document.querySelector(".lib-header h1");
+  if (h1) h1.textContent = country;
+  const tag = document.querySelector(".lib-header .tagline");
+  if (tag) {
+    tag.textContent = "";
+    const back = document.createElement("a");
+    back.className = "back-link";
+    back.href = "index.html";
+    back.textContent = "‹ Все страны";
+    tag.appendChild(back);
+  }
+  for (const exc of data.excursions.filter((e) => e.country === country)) {
+    root.appendChild(buildCard(exc));
   }
 }
 
@@ -64,20 +98,25 @@ function buildCard(exc) {
   const card = document.createElement("article");
   card.className = "card";
   card.innerHTML = `
-    <div class="cover">${exc.emoji || "🎧"}</div>
-    <div class="card-body">
-      <h3></h3>
-      <p class="sub"></p>
-      <p class="desc"></p>
-      <p class="meta">…</p>
-      <div class="card-actions">
-        <a class="btn primary listen">Слушать</a>
-        <button class="btn offline-btn">Скачать офлайн</button>
+    <div class="card-top">
+      <div class="mark"></div>
+      <div class="card-headings">
+        <h3></h3>
+        <p class="sub"></p>
       </div>
-      <button class="chapters-toggle" hidden>Все главы ▾</button>
-      <ol class="card-chapters" hidden></ol>
-      <p class="offline-state" hidden>✓ Доступно офлайн<button class="del">удалить</button></p>
-    </div>`;
+    </div>
+    <p class="desc"></p>
+    <div class="card-foot">
+      <p class="meta">…</p>
+      <p class="offline-state" hidden>✓ офлайн<button class="del">удалить</button></p>
+    </div>
+    <div class="card-actions">
+      <a class="btn primary listen">Слушать</a>
+      <button class="btn offline-btn">Скачать</button>
+    </div>
+    <button class="chapters-toggle" hidden>Все главы ▾</button>
+    <ol class="card-chapters" hidden></ol>`;
+  card.querySelector(".mark").textContent = exc.hanzi || exc.emoji || "";
   card.querySelector("h3").textContent = exc.title;
   card.querySelector(".sub").textContent = exc.subtitle || "";
   card.querySelector(".desc").textContent = exc.description || "";
@@ -122,7 +161,7 @@ function buildCard(exc) {
     btn.disabled = true;
     try {
       await downloadLocation(exc.id, (p) => { btn.textContent = `Скачиваю… ${p}%`; });
-      btn.textContent = "Скачать офлайн";
+      btn.textContent = "Скачать";
     } catch (e) {
       btn.textContent = "Ошибка, повторить";
     }
@@ -132,7 +171,7 @@ function buildCard(exc) {
 
   state.querySelector(".del").addEventListener("click", async () => {
     await caches.delete(`loc-${exc.id}`);
-    btn.textContent = "Скачать офлайн";
+    btn.textContent = "Скачать";
     refreshOffline();
   });
 
@@ -179,7 +218,12 @@ async function initPlayer() {
   try {
     const lib = await fetchJSON("locations/locations.json");
     const entry = lib.excursions.find((e) => e.id === loc);
-    if (entry) excTitle = entry.title;
+    if (entry) {
+      excTitle = entry.title;
+      // назад — на страницу страны, а не на список стран
+      const back = document.querySelector(".player-header .back");
+      if (back) back.href = `index.html?country=${encodeURIComponent(entry.country)}`;
+    }
   } catch (e) { /* офлайн без кэша библиотеки — не критично */ }
 
   const chapters = await fetchJSON(`locations/${loc}/chapters.json`);
