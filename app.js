@@ -232,6 +232,18 @@ async function initPlayer() {
   chapters.reduce((a, c, i) => { cum[i] = a; return a + c.duration_sec; }, 0);
 
   const audio = $("#audio");
+
+  /* «Удержатель» аудиосессии: беззвучный луп не даёт iOS заморозить приложение
+     на паузе за локскрином — иначе кнопка play на локскрине жмёт в спящий процесс.
+     Запускается один раз, строго из обработчика реального тапа. */
+  const keeper = $("#keeper");
+  let keeperArmed = false;
+  function armKeeper() {
+    if (keeperArmed || !keeper) return;
+    keeperArmed = true;
+    keeper.play().catch(() => { keeperArmed = false; });
+  }
+
   let idx = 0;
   let timings = [];
   let textMode = false;
@@ -286,6 +298,7 @@ async function initPlayer() {
       p.textContent = row.text;
       p.dataset.start = row.start_sec;
       p.addEventListener("click", () => {
+        armKeeper();
         audio.currentTime = row.start_sec;
         if (audio.paused) audio.play().catch(() => {});
       });
@@ -370,6 +383,7 @@ async function initPlayer() {
   /* ---------- кнопки ---------- */
   const playBtn = $("#btn-play");
   playBtn.addEventListener("click", () => {
+    armKeeper();
     if (audio.paused) audio.play().catch(() => {}); else audio.pause();
   });
   audio.addEventListener("play", () => {
@@ -419,6 +433,7 @@ async function initPlayer() {
         (listened.has(i) ? `<span class="done">✓</span>` : "");
       li.querySelector(".name").textContent = c.title;
       li.addEventListener("click", () => {
+        armKeeper();
         $("#chapters-panel").hidden = true;
         loadChapter(i, { autoplay: true });
       });
@@ -437,6 +452,8 @@ async function initPlayer() {
     } else {
       savePos(0, 0);
       playBtn.textContent = "▶";
+      // экскурсия закончилась — отпускаем аудиосессию
+      if (keeper) { keeper.pause(); keeperArmed = false; }
     }
   });
 
@@ -518,6 +535,7 @@ async function initPlayer() {
     $("#resume-text").textContent = `Продолжить с ${fmt(saved.time)}, глава ${saved.chapter + 1}?`;
     $("#resume-banner").hidden = false;
     $("#resume-yes").addEventListener("click", () => {
+      armKeeper();
       $("#resume-banner").hidden = true;
       loadChapter(saved.chapter, { at: saved.time, autoplay: true });
     });
