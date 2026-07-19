@@ -2,7 +2,7 @@
    Все пути относительные — scope равен каталогу, где лежит sw.js. */
 "use strict";
 
-const SHELL_CACHE = "shell-v10";
+const SHELL_CACHE = "shell-v11";
 const SHELL_FILES = [
   "./",
   "index.html",

@@ -464,7 +464,23 @@ async function initPlayer() {
       ],
     });
     const ms = navigator.mediaSession;
-    ms.setActionHandler("play", () => audio.play());
+    ms.setActionHandler("play", () => {
+      // iOS-баг: после паузы за локскрином звуковая сессия отключена —
+      // audio «играет» беззвучно. Лечение: перезапуск конвейера с возвратом на место.
+      if (document.visibilityState === "hidden") {
+        const t = audio.currentTime;
+        const wasRate = audio.playbackRate;
+        audio.src = audio.currentSrc || audio.src;
+        const once = () => {
+          audio.removeEventListener("loadedmetadata", once);
+          audio.currentTime = t;
+          audio.playbackRate = wasRate;
+          audio.play().catch(() => {});
+        };
+        audio.addEventListener("loadedmetadata", once);
+      }
+      audio.play().catch(() => {});
+    });
     ms.setActionHandler("pause", () => audio.pause());
     ms.setActionHandler("seekbackward", () => { audio.currentTime = Math.max(0, audio.currentTime - 15); });
     ms.setActionHandler("seekforward", () => { audio.currentTime = Math.min(chDur(), audio.currentTime + 15); });
