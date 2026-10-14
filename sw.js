@@ -2,7 +2,7 @@
    Все пути относительные — scope равен каталогу, где лежит sw.js. */
 "use strict";
 
-const SHELL_CACHE = "shell-v13";
+const SHELL_CACHE = "shell-v14";
 const SHELL_FILES = [
   "./",
   "index.html",
@@ -19,6 +19,16 @@ const SHELL_FILES = [
   "fonts/playfair-cyrillic.woff",
   "fonts/playfair-latin.woff",
   "locations/locations.json",
+  "covers/mutianyu.png",
+  "covers/tianmen.png",
+  "covers/shanghai.png",
+  "covers/wulingyuan.png",
+  "covers/isaac.png",
+  "covers/spas.png",
+  "covers/hermitage.png",
+  "covers/petropavlovka.png",
+  "covers/bronze.png",
+  "covers/facts.png",
 ];
 
 self.addEventListener("install", (e) => {

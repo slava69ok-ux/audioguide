@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><rect width="512" height="512" fill="#0f1115"/>
+<circle cx="110" cy="105" r="40" fill="#e8e4d9"/><circle cx="92" cy="95" r="36" fill="#0f1115"/>
+<path d="M60 512 L170 230 L250 150 L330 150 L410 240 L470 512Z" fill="#1c2535"/>
+<path d="M215 512 V400 A41 41 0 0 1 297 400 V512Z" fill="#0f1115"/>
+<path d="M215 512 V400 A41 41 0 0 1 297 400" fill="none" stroke="#f0a04b" stroke-width="6"/>
+<path d="M0 60 L512 190" stroke="#e8e4d9" stroke-width="3"/>
+<g transform="translate(300 133)"><line x1="0" y1="0" x2="0" y2="22" stroke="#e8e4d9" stroke-width="3"/><rect x="-20" y="22" width="40" height="28" rx="5" fill="#f0a04b"/><rect x="-13" y="29" width="11" height="12" fill="#0f1115"/><rect x="2" y="29" width="11" height="12" fill="#0f1115"/></g>
+<path d="M0 512 L0 440 L120 470 L190 440 L330 480 L512 430 V512Z" fill="#141a26"/>
+</svg>

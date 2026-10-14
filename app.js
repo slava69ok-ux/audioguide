@@ -125,7 +125,10 @@ function buildCard(exc) {
     </div>
     <button class="chapters-toggle" hidden>Все главы ▾</button>
     <ol class="card-chapters" hidden></ol>`;
-  card.querySelector(".mark").textContent = exc.hanzi || exc.emoji || "";
+  const markImg = document.createElement("img");
+  markImg.src = `covers/${exc.id}.png`;
+  markImg.alt = "";
+  card.querySelector(".mark").appendChild(markImg);
   card.querySelector("h3").textContent = exc.title;
   card.querySelector(".sub").textContent = exc.subtitle || "";
   card.querySelector(".desc").textContent = exc.description || "";
@@ -263,6 +266,7 @@ async function initPlayer() {
   const listened = new Set(JSON.parse(localStorage.getItem(doneKey) || "[]"));
 
   $("#exc-title").textContent = excTitle;
+  $(".artwork img").src = `covers/${loc}.png`;
   document.title = excTitle;
 
   function chDur() {
@@ -485,8 +489,7 @@ async function initPlayer() {
       artist: excTitle,
       album: "Аудиогид",
       artwork: [
-        { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
-        { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
+        { src: `covers/${loc}.png`, sizes: "512x512", type: "image/png" },
       ],
     });
     const ms = navigator.mediaSession;
