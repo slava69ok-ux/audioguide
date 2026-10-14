@@ -140,6 +140,11 @@ h1, h2, h3, .card-body h3, #chapter-title {
   padding: 18px 18px 8px;
   margin-bottom: 14px;
 }
+.city-heading {
+  font-family: var(--serif); font-size: 15px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin: 22px 4px 12px;
+}
 .card-top { display: flex; gap: 14px; align-items: center; }
 .mark {
   writing-mode: vertical-rl;

@@ -89,7 +89,16 @@ function renderCountry(root, data, country) {
     back.textContent = "‹ Все страны";
     tag.appendChild(back);
   }
+  let lastCity = null;
   for (const exc of data.excursions.filter((e) => e.country === country)) {
+    // необязательное поле city: заголовок города перед его экскурсиями
+    if (exc.city && exc.city !== lastCity) {
+      const h2 = document.createElement("h2");
+      h2.className = "city-heading";
+      h2.textContent = exc.city;
+      root.appendChild(h2);
+    }
+    lastCity = exc.city || null;
     root.appendChild(buildCard(exc));
   }
 }

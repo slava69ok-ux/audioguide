@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ok = True
 
 # целевой хронометраж по локациям, минуты (по умолчанию — просто здравый смысл)
-RANGES = {"mutianyu": (78, 95), "tianmen": (40, 62), "wulingyuan": (36, 62), "shanghai": (80, 125)}
+RANGES = {"isaac": (4, 15), "spas": (4, 15), "hermitage": (4, 15), "petropavlovka": (4, 15), "bronze": (4, 15), "facts": (4, 15), "mutianyu": (78, 95), "tianmen": (40, 62), "wulingyuan": (36, 62), "shanghai": (80, 125)}
 
 
 def fail(msg):
